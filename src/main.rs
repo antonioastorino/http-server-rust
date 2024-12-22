@@ -2,7 +2,10 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 mod http_handler;
+mod http_response_status;
+use http_handler::common_handler::verify_version;
 use http_handler::common_handler::RequestType;
+use http_response_status::*;
 
 fn main() {
     println!("Hello, TCP!");
@@ -31,12 +34,22 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), &'static str> {
     let request_type: RequestType = RequestType::from_str(first_line_split[0]);
     let request_address: &str = first_line_split[1];
     let request_version: &str = first_line_split[2];
+    match verify_version(request_version) {
+        Ok(()) => println!("Request valid"),
+        Err(()) => return Err("Invalid version"),
+    };
     println!("{:?}", &request_version);
+    let mut response_status: http_response_status::ResponseStatus;
     match request_type {
-        RequestType::GET => http_handler::get_handler::validate(request_address)?,
-        RequestType::POST => handle_post_request(&body),
-        RequestType::UNKNOWN => todo!(),
-    }
+        RequestType::Get => response_status = http_handler::get_handler::validate(request_address),
+        RequestType::Post => {
+            response_status = http_handler::get_handler::validate(request_address)
+        }
+        RequestType::Unknown => return Err("Unknown request"),
+    };
+
+    println!("{:?}", response_status);
+
     return Ok(());
 }
 

@@ -1,0 +1,17 @@
+use crate::http_response_status::ResponseStatus;
+
+const VALID_API_ADDRESSES: [&'static str; 1] = ["/api/status"];
+const VALID_ADDRESSES: [&'static str; 2] = ["/", "/index.html"];
+
+pub fn validate(address: &str) -> Result<ResponseStatus, &'static str> {
+    if VALID_API_ADDRESSES.contains(&address) {
+
+        return Ok(ResponseStatus::Ok("hello"));
+    }
+
+    if VALID_ADDRESSES.contains(&address) {
+        return Ok(ResponseStatus::Valid);
+    }
+
+    return Err("Invalid GET address");
+}

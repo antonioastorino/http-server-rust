@@ -1,0 +1,20 @@
+pub type StatusCodeAndMessage = (u16, &'static str);
+
+#[derive(Debug, PartialEq)]
+pub enum ResponseStatus {
+    Ok(&'static str),
+    NoContent,
+    BadRequest,
+    NotFound,
+}
+
+impl ResponseStatus {
+    pub fn to_code_and_message(status: ResponseStatus) -> StatusCodeAndMessage {
+        match status {
+            ResponseStatus::Valid => return (200, "OK"),
+            ResponseStatus::NoContent => return (204, "No Content"),
+            ResponseStatus::BadRequest => return (400, "Bad Request"),
+            ResponseStatus::NotFound => return (404, "Not Found"),
+        }
+    }
+}
