@@ -2,11 +2,7 @@
 pub enum ContentType {
     Json,
     TextHtml,
-}
-
-pub struct ResponseContent {
-    path: &'static str,
-    content_type: ContentType,
+    Empty,
 }
 
 #[derive(Debug, PartialEq)]
@@ -19,16 +15,23 @@ pub enum ResponseStatus {
     HttpVersionNotSupported,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct ResponseContents {
+    pub status: ResponseStatus,
+    pub path: &'static str,
+    pub content_type: ContentType,
+}
 pub struct StatusCodeAndMessage {
     pub code: u16,
     pub message: &'static str,
 }
 
 impl ContentType {
-    pub fn to_str(self) -> &'static str {
+    pub fn to_str(&self) -> &'static str {
         match self {
             ContentType::Json => "application/json",
             ContentType::TextHtml => "text/html",
+            ContentType::Empty => "none",
         }
     }
 }
