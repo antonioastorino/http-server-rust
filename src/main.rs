@@ -30,20 +30,29 @@ fn handle_connection(mut stream: TcpStream) -> ResponseStatus {
         return ResponseStatus::BadRequest;
     }
 
-    let request_type: RequestMethod = RequestMethod::from_str(first_line_split[0]);
-    let request_address: &str = first_line_split[1];
-    let request_version: &str = first_line_split[2];
+    let request_method_str: &str = first_line_split[0];
+    let request_address_str: &str = first_line_split[1];
+    let request_version_str: &str = first_line_split[2];
 
-    if request_type == RequestMethod::Unknown {
-        return ResponseStatus::MethodNotAllowed;
-    }
-    match validate_version(request_version) {
-        Ok(()) => println!("Request version: {}", &request_version),
+    let request_method: RequestMethod = match validate_method(request_method_str) {
+        Ok(method) => method,
+        Err(()) => {
+            return ResponseStatus::MethodNotAllowed;
+        }
+    };
+
+    match validate_version(request_version_str) {
+        Ok(()) => println!("Request version: {}", &request_version_str),
         Err(()) => return ResponseStatus::HttpVersionNotSupported,
     };
-    match validate_uri(request_address) {
-        Ok(()) => println!("Request URI: {}", &request_address),
-        Err(()) => return ResponseStatus::NotFound,
-    };
+
+    let request_address_type: RequestAddressType =
+        match validate_address(request_address_str, &request_method) {
+            Ok(address_type) => address_type,
+            Err(()) => {
+                return ResponseStatus::NotFound;
+            }
+        };
+    println!("Address type: {:?} - Method: {:?}", request_address_type, &request_method);
     return ResponseStatus::Ok;
 }

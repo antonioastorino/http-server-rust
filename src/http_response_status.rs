@@ -60,7 +60,7 @@ impl ResponseStatus {
                     message: "Not Found",
                 }
             }
-            ResponseStatus::MethodNotAllowed=> {
+            ResponseStatus::MethodNotAllowed => {
                 return StatusCodeAndMessage {
                     code: 405,
                     message: "Method Not Allowed",
