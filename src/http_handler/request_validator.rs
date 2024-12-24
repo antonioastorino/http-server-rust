@@ -1,7 +1,6 @@
 const VALID_API_ADDRESSES_GET: [&'static str; 1] = ["/api/status"];
 const VALID_API_ADDRESSES_POST: [&'static str; 1] = ["/api/set"];
 const VALID_ADDRESSES_GET: [&'static str; 2] = ["/", "/index.html"];
-const VALID_ADDRESSES_POST: [&'static str; 1] = ["/post.html"];
 
 #[derive(Debug, PartialEq)]
 pub enum RequestMethod {
@@ -13,6 +12,12 @@ pub enum RequestMethod {
 pub enum RequestAddressType {
     Uri,
     Url,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct RequestData {
+    pub method: RequestMethod,
+    pub address_type: RequestAddressType,
 }
 
 pub fn validate_method(input: &str) -> Result<RequestMethod, ()> {
@@ -36,9 +41,6 @@ pub fn validate_address(address: &str, method: &RequestMethod) -> Result<Request
         }
         RequestMethod::Post => {
             if VALID_API_ADDRESSES_POST.contains(&address) {
-                return Ok(RequestAddressType::Uri);
-            }
-            if VALID_ADDRESSES_POST.contains(&address) {
                 return Ok(RequestAddressType::Url);
             }
             return Err(());

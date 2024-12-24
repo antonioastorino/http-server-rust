@@ -11,15 +11,20 @@ fn main() {
     let listener: TcpListener = TcpListener::bind("127.0.0.1:8081").unwrap();
     for incoming in listener.incoming() {
         let mut stream = incoming.unwrap();
-        let response_contents = handle_connection(&stream);
-        let response_header = http_handler::response_header::create(&response_contents.status);
+        let response_header = match handle_connection(&stream) {
+            Ok(_) => {
+                let tmp = ResponseStatus::Ok;
+                http_handler::response_header::create(&tmp)
+            }
+            Err(status) => http_handler::response_header::create(&status),
+        };
         println!("{}", &response_header);
         stream.write(response_header.as_bytes()).unwrap();
         stream.flush().unwrap();
     }
 }
 
-fn handle_connection(mut stream: &TcpStream) -> ResponseContents {
+fn handle_connection(mut stream: &TcpStream) -> Result<RequestData, ResponseStatus> {
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
 
@@ -27,16 +32,12 @@ fn handle_connection(mut stream: &TcpStream) -> ResponseContents {
     return parse_request(text.to_string());
 }
 
-fn parse_request(text: String) -> ResponseContents {
+fn parse_request(text: String) -> Result<RequestData, ResponseStatus> {
     let split_text = text.lines().collect::<Vec<&str>>();
     let first_line = split_text[0];
     let first_line_split = first_line.split(" ").collect::<Vec<&str>>();
     if first_line_split.len() != 3 {
-        return ResponseContents {
-            status: ResponseStatus::BadRequest,
-            path: "",
-            content_type: ContentType::Empty,
-        };
+        return Err(ResponseStatus::BadRequest);
     }
 
     let request_method_str: &str = first_line_split[0];
@@ -46,22 +47,14 @@ fn parse_request(text: String) -> ResponseContents {
     let request_method: RequestMethod = match validate_method(request_method_str) {
         Ok(method) => method,
         Err(()) => {
-            return ResponseContents {
-                status: ResponseStatus::MethodNotAllowed,
-                path: "",
-                content_type: ContentType::Empty,
-            };
+            return Err(ResponseStatus::MethodNotAllowed);
         }
     };
 
     match validate_version(request_version_str) {
         Ok(()) => println!("Request version: {}", &request_version_str),
         Err(()) => {
-            return ResponseContents {
-                status: ResponseStatus::HttpVersionNotSupported,
-                path: "",
-                content_type: ContentType::Empty,
-            };
+            return Err(ResponseStatus::HttpVersionNotSupported);
         }
     };
 
@@ -69,22 +62,18 @@ fn parse_request(text: String) -> ResponseContents {
         match validate_address(request_address_str, &request_method) {
             Ok(address_type) => address_type,
             Err(()) => {
-                return ResponseContents {
-                    status: ResponseStatus::NotFound,
-                    path: "",
-                    content_type: ContentType::Empty,
-                };
+                return Err(ResponseStatus::NotFound);
             }
         };
+
     println!(
         "Address type: {:?} - Method: {:?}",
         &request_address_type, &request_method
     );
-    return ResponseContents {
-        status: ResponseStatus::Ok,
-        path: "should be taken from a static list",
-        content_type: ContentType::Empty,
-    };
+    return Ok(RequestData {
+        method: request_method,
+        address_type: request_address_type,
+    });
 }
 
 pub mod test {
@@ -93,33 +82,37 @@ pub mod test {
 
     #[test]
     pub fn valid_addresses() {
-        let status: ResponseStatus = parse_request(String::from("GET / HTTP/1.1\r\n")).status;
-        assert_eq!(status, ResponseStatus::Ok);
-        let status: ResponseStatus =
-            parse_request(String::from("GET /index.html HTTP/1.1\r\n")).status;
-        assert_eq!(status, ResponseStatus::Ok);
+        let request_data = parse_request(String::from("GET / HTTP/1.1\r\n")).unwrap();
+        assert_eq!(request_data.method, RequestMethod::Get);
+        let request_data = parse_request(String::from("GET /index.html HTTP/1.1\r\n")).unwrap();
+        assert_eq!(request_data.method, RequestMethod::Get);
+        let request_data = parse_request(String::from("GET /api/status HTTP/1.1\r\n")).unwrap();
+        assert_eq!(request_data.method, RequestMethod::Get);
+        let request_data = parse_request(String::from("POST /api/set HTTP/1.1\r\n")).unwrap();
+        assert_eq!(request_data.method, RequestMethod::Post);
     }
 
     #[test]
     pub fn bad_request() {
         let status: ResponseStatus =
-            parse_request(String::from("GET /missing_parameter\r\n")).status;
+            parse_request(String::from("GET /missing_parameter\r\n")).unwrap_err();
         assert_eq!(status, ResponseStatus::BadRequest);
-        let status: ResponseStatus = parse_request(String::from("GET /too many params\n")).status;
+        let status: ResponseStatus =
+            parse_request(String::from("GET /too many params\n")).unwrap_err();
         assert_eq!(status, ResponseStatus::BadRequest);
     }
 
     #[test]
     pub fn invalid_http_version() {
         let status: ResponseStatus =
-            parse_request(String::from("GET /index.html anything\r\n")).status;
+            parse_request(String::from("GET /index.html anything\r\n")).unwrap_err();
         assert_eq!(status, ResponseStatus::HttpVersionNotSupported);
     }
 
     #[test]
     pub fn not_found() {
         let status: ResponseStatus =
-            parse_request(String::from("GET /not_found HTTP/1.1\r\n")).status;
+            parse_request(String::from("GET /not_found HTTP/1.1\r\n")).unwrap_err();
         assert_eq!(status, ResponseStatus::NotFound);
     }
 }
