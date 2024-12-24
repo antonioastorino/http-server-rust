@@ -1,2 +1,2 @@
-pub mod common_handler;
-pub mod get_handler;
+pub mod http_response;
+pub mod validator;
