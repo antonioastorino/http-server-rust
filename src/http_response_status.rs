@@ -20,8 +20,8 @@ pub enum ResponseStatus {
 }
 
 pub struct StatusCodeAndMessage {
-    code: u16,
-    message: &'static str,
+    pub code: u16,
+    pub message: &'static str,
 }
 
 impl ContentType {
@@ -34,12 +34,12 @@ impl ContentType {
 }
 
 impl ResponseStatus {
-    pub fn to_code_and_message(self) -> StatusCodeAndMessage {
+    pub fn to_code_and_message(&self) -> StatusCodeAndMessage {
         match self {
             ResponseStatus::Ok => {
                 return StatusCodeAndMessage {
                     code: 200,
-                    message: "Ok",
+                    message: "OK",
                 }
             }
             ResponseStatus::NoContent => {

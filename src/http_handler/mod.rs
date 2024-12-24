@@ -1,2 +1,2 @@
-pub mod http_response;
-pub mod validator;
+pub mod request_validator;
+pub mod response_header;
