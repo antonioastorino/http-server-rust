@@ -2,39 +2,34 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 mod http_handler;
-mod http_response_status;
 use http_handler::request::*;
-use http_response_status::*;
+use http_handler::response::*;
 
 fn main() {
     println!("Hello, TCP!");
     let listener: TcpListener = TcpListener::bind("127.0.0.1:8081").unwrap();
     for incoming in listener.incoming() {
         let mut stream = incoming.unwrap();
-        let request_data: RequestData = handle_connection(&stream);
-        /*
-        let mut response_header: String;
-        if request_data.http_version == RequestHttpVersion::Unknown {
-                response_header_string = http_handler::response_header::create(ResponseStatus::HttpVersionNotSupported)
-            }
-        else if response_header.method == RequestData::Unknown {
-            http_handler::response_header::create(ResponseStatus::MethodNotAllowed);
+        let mut buffer = [0; 1024];
+        stream.read(&mut buffer).unwrap();
+        let text = String::from_utf8_lossy(&buffer[..]);
+        let request_data: Request = Request::new(text.to_string());
+        let response_data: Response = Response::new(&request_data);
+        let mut response_header: String = format!(
+            "{} {}\r\nContent-Length: {}\r\n",
+            request_data.http_version.to_str(),
+            response_data.status.to_str(),
+            response_data.payload.content_size,
+        )
+        .to_string();
+        if response_data.payload.content_size > 0 {
+            response_header.push_str("Content-Type: ");
+            response_header.push_str(response_data.payload.content_type.to_str());
+            response_header.push_str("\r\n");
         }
-        else if response_header.address_type == RequestAddressType::Unknonw {
-            http_handler::response_header::create(ResponseStatus::NotFound);
-        }
-        */
-
-        println!("{:?}", &request_data);
-        //        stream.write(response_header.as_bytes()).unwrap();
-        //        stream.flush().unwrap();
+        response_header.push_str("\r\n");
+        println!("{}", response_header);
+        stream.write(response_header.as_bytes()).unwrap();
+        stream.flush().unwrap();
     }
-}
-
-fn handle_connection(mut stream: &TcpStream) -> RequestData {
-    let mut buffer = [0; 1024];
-    stream.read(&mut buffer).unwrap();
-
-    let text = String::from_utf8_lossy(&buffer[..]);
-    return RequestData::new(text.to_string());
 }
