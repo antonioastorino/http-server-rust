@@ -1,2 +1,2 @@
-pub mod request_validator;
+pub mod request;
 pub mod response;

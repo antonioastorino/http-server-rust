@@ -1,4 +1,4 @@
-use crate::http_handler::request_validator::RequestData;
+use crate::http_handler::request::RequestData;
 use crate::http_response_status::*;
 
 pub fn from_uri_to_path(path_str: &str) -> &'static str {

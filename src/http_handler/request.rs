@@ -1,0 +1,168 @@
+const VALID_API_ADDRESSES_GET: [&'static str; 1] = ["/api/status"];
+const VALID_API_ADDRESSES_POST: [&'static str; 1] = ["/api/set"];
+const VALID_ADDRESSES_GET: [&'static str; 2] = ["/", "/index.html"];
+
+#[derive(Debug, PartialEq)]
+pub enum RequestSyntax {
+    Known,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum RequestHttpVersion {
+    Http11,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum RequestMethod {
+    Get,
+    Post,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum RequestAddressType {
+    Uri,
+    Url,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct RequestData {
+    pub syntax: RequestSyntax,
+    pub http_version: RequestHttpVersion,
+    pub method: RequestMethod,
+    pub address_type: RequestAddressType,
+}
+
+impl RequestData {
+    pub fn new(text: String) -> Self {
+        let mut ret_request_data = Self {
+            syntax: RequestSyntax::Unknown,
+            http_version: RequestHttpVersion::Unknown,
+            method: RequestMethod::Unknown,
+            address_type: RequestAddressType::Unknown,
+        };
+        let split_text = text.lines().collect::<Vec<&str>>();
+        let first_line = split_text[0];
+        let first_line_split = first_line.split(" ").collect::<Vec<&str>>();
+
+        ret_request_data.syntax = validate_syntax(&first_line_split);
+        if ret_request_data.syntax == RequestSyntax::Unknown {
+            return ret_request_data;
+        }
+
+        let request_method_str: &str = first_line_split[0];
+        let request_address_str: &str = first_line_split[1];
+        let request_version_str: &str = first_line_split[2];
+
+        ret_request_data.method = validate_method(request_method_str);
+        if ret_request_data.method == RequestMethod::Unknown {
+            return ret_request_data;
+        }
+
+        ret_request_data.http_version = validate_version(request_version_str);
+        if ret_request_data.http_version == RequestHttpVersion::Unknown {
+            return ret_request_data;
+        }
+
+        ret_request_data.address_type =
+            validate_address(request_address_str, &ret_request_data.method);
+        return ret_request_data;
+    }
+}
+
+pub fn validate_syntax(input: &Vec<&str>) -> RequestSyntax {
+    if input.len() != 3 {
+        return RequestSyntax::Unknown;
+    }
+    return RequestSyntax::Known;
+}
+
+pub fn validate_method(input: &str) -> RequestMethod {
+    match input {
+        "GET" => RequestMethod::Get,
+        "POST" => RequestMethod::Post,
+        _ => return RequestMethod::Unknown,
+    }
+}
+
+pub fn validate_address(address: &str, method: &RequestMethod) -> RequestAddressType {
+    match method {
+        RequestMethod::Get => {
+            if VALID_API_ADDRESSES_GET.contains(&address) {
+                return RequestAddressType::Uri;
+            }
+            if VALID_ADDRESSES_GET.contains(&address) {
+                return RequestAddressType::Url;
+            }
+            return RequestAddressType::Unknown;
+        }
+        RequestMethod::Post => {
+            if VALID_API_ADDRESSES_POST.contains(&address) {
+                return RequestAddressType::Uri;
+            }
+            return RequestAddressType::Unknown;
+        }
+        RequestMethod::Unknown => {
+            return RequestAddressType::Unknown;
+        }
+    }
+}
+
+pub fn validate_version(version: &str) -> RequestHttpVersion {
+    println!("{}", version);
+    if version == "HTTP/1.1" {
+        return RequestHttpVersion::Http11;
+    }
+    return RequestHttpVersion::Unknown;
+}
+
+pub mod test {
+    use crate::*;
+
+    #[test]
+    pub fn valid_addresses() {
+        let request_data = RequestData::new(String::from("GET / HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address_type, RequestAddressType::Url);
+        let request_data = RequestData::new(String::from("GET /index.html HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address_type, RequestAddressType::Url);
+        let request_data = RequestData::new(String::from("GET /api/status HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address_type, RequestAddressType::Uri);
+        let request_data = RequestData::new(String::from("POST /api/set HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Post);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address_type, RequestAddressType::Uri);
+    }
+
+    #[test]
+    pub fn bad_request() {
+        let request_data = RequestData::new(String::from("GET /missing_parameter\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Unknown);
+        let request_data = RequestData::new(String::from("GET /too many params\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Unknown);
+    }
+
+    #[test]
+    pub fn invalid_http_version() {
+        let request_data = RequestData::new(String::from("GET /index.html anything\r\n"));
+        assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
+    }
+
+    #[test]
+    pub fn not_found() {
+        let request_data = RequestData::new(String::from("GET /not_found HTTP/1.1\r\n"));
+        assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+    }
+}
