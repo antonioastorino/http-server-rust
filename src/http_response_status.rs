@@ -15,23 +15,6 @@ pub enum ResponseStatus {
     HttpVersionNotSupported,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct ResponseContents {
-    pub path: &'static str,
-    pub content_type: ContentType,
-    pub content_size: u32,
-}
-
-impl ResponseContents {
-    pub fn new_with_no_content(status: ResponseStatus) -> Self {
-        Self {
-            path: "",
-            content_type: ContentType::Empty,
-            content_size: 0,
-        }
-    }
-}
-
 pub struct StatusCodeAndMessage {
     pub code: u16,
     pub message: &'static str,
