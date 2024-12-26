@@ -89,23 +89,24 @@ impl Response {
         let mut content_type = ContentType::Unknown;
         let (status, path) = if request_data.syntax == RequestSyntax::Unknown {
             (ResponseStatus::BadRequest, "www/bad_request.html")
-        } else if request_data.http_version == RequestHttpVersion::Unknown {
-            (
-                ResponseStatus::HttpVersionNotSupported,
-                "www/http_version_not_supported.html",
-            )
         } else if request_data.method == RequestMethod::Unknown {
             (
                 ResponseStatus::MethodNotAllowed,
                 "www/method_not_allowed.html",
             )
+        } else if request_data.http_version == RequestHttpVersion::Unknown {
+            (
+                ResponseStatus::HttpVersionNotSupported,
+                "www/http_version_not_supported.html",
+            )
         } else if request_data.address_type == RequestAddressType::Unknown {
             (ResponseStatus::NotFound, "www/not_found.html")
         } else {
+            // The syntax is ok. Post method don't have content -> successful request
             if request_data.method == RequestMethod::Post {
                 (ResponseStatus::NoContent, request_data.address)
             } else {
-                // verify that the file exists
+                // Get requests want a file -> check that the file exists
                 if std::path::Path::new(request_data.address).exists() {
                     (ResponseStatus::Ok, request_data.address)
                 } else {
@@ -116,7 +117,7 @@ impl Response {
                 }
             }
         };
-        if request_data.method != RequestMethod::Post {
+        if status != ResponseStatus::NoContent {
             content_size = std::fs::metadata(path).unwrap().len();
         }
         return Self {

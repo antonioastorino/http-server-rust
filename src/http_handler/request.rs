@@ -15,7 +15,7 @@ pub fn from_address_to_path(path_str: &str) -> &'static str {
         }
     }
 
-    return "www/not_found.html";
+    return "";
 }
 
 #[derive(Debug, PartialEq)]
@@ -85,21 +85,9 @@ impl Request {
         let request_version_str: &str = first_line_split[2];
 
         ret_request_data.method = validate_method(request_method_str);
-        if ret_request_data.method == RequestMethod::Unknown {
-            return ret_request_data;
-        }
-
         ret_request_data.http_version = validate_version(request_version_str);
-        if ret_request_data.http_version == RequestHttpVersion::Unknown {
-            return ret_request_data;
-        }
-
         ret_request_data.address_type =
             validate_address(request_address_str, &ret_request_data.method);
-        if ret_request_data.address_type == RequestAddressType::Unknown {
-            return ret_request_data;
-        }
-
         ret_request_data.address = from_address_to_path(request_address_str);
         return ret_request_data;
     }
@@ -203,8 +191,18 @@ pub mod test {
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
+        assert_eq!(request_data.address_type, RequestAddressType::Url);
+        assert_eq!(request_data.address, "www/index.html");
+    }
+
+    #[test]
+    pub fn method_not_allowed() {
+        let request_data = Request::new(String::from("PUT /index.html HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Unknown);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address_type, RequestAddressType::Unknown);
-        assert_eq!(request_data.address, "");
+        assert_eq!(request_data.address, "www/index.html");
     }
 
     #[test]

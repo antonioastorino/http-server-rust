@@ -47,6 +47,7 @@ fn main() {
             response_header.push_str("Content-Type: ");
             response_header.push_str(response_data.payload.content_type.to_str());
             response_header.push_str("\r\n\r\n");
+            println!("{}", response_header);
             stream.write(response_header.as_bytes()).unwrap();
             unsafe {
                 sendfile(&response_data.payload, &mut stream);
