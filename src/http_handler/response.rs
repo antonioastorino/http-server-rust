@@ -38,11 +38,6 @@ pub enum ResponseStatus {
     InternalServerError,
 }
 
-pub struct StatusCodeAndMessage {
-    pub code: u16,
-    pub message: &'static str,
-}
-
 impl ResponseStatus {
     pub fn to_str(&self) -> &'static str {
         match self {
@@ -86,7 +81,6 @@ pub struct Response {
 impl Response {
     pub fn new(request_data: &Request) -> Self {
         let mut content_size = 0;
-        let mut content_type = ContentType::Unknown;
         let (status, path) = if request_data.syntax == RequestSyntax::Unknown {
             (ResponseStatus::BadRequest, "www/bad_request.html")
         } else if request_data.method == RequestMethod::Unknown {

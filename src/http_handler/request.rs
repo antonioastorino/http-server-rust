@@ -139,8 +139,6 @@ pub fn validate_version(version: &str) -> RequestHttpVersion {
 }
 
 pub mod test {
-    use crate::*;
-
     #[test]
     pub fn valid_addresses() {
         let request_data = Request::new(String::from("GET / HTTP/1.1\r\n"));
