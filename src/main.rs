@@ -1,18 +1,28 @@
-use std::io::prelude::*;
-use std::net::TcpListener;
-use std::net::TcpStream;
 mod http_handler;
 use http_handler::request::*;
 use http_handler::response::*;
+use std::io::prelude::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
 use std::os::fd::AsRawFd;
 extern crate core;
 
-extern "C" {
-    fn tcp_utils_send_file(
-        file_path: *const std::os::raw::c_char,
-        file_size: u64,
-        socket: i32,
-    ) -> i32;
+fn sendfile(payload: &ResponsePayload, stream: &mut TcpStream) -> i32 {
+    extern "C" {
+        fn tcp_utils_send_file(
+            file_path: *const std::os::raw::c_char,
+            file_size: u64,
+            socket: i32,
+        ) -> i32;
+    }
+    let c_string = std::ffi::CString::new(payload.path).unwrap();
+    unsafe {
+        return tcp_utils_send_file(
+            (&c_string).as_ptr(),
+            payload.content_size,
+            stream.as_raw_fd(),
+        );
+    }
 }
 
 fn main() {
@@ -38,16 +48,8 @@ fn main() {
             response_header.push_str(response_data.payload.content_type.to_str());
             response_header.push_str("\r\n\r\n");
             stream.write(response_header.as_bytes()).unwrap();
-            let c_string = std::ffi::CString::new(response_data.payload.path).unwrap();
-            println!("File path {:?}", &c_string);
-            println!("File size {}", response_data.payload.content_size);
-            println!("Socket {}", stream.as_raw_fd());
             unsafe {
-                tcp_utils_send_file(
-                    (&c_string).as_ptr(),
-                    response_data.payload.content_size,
-                    stream.as_raw_fd(),
-                );
+                sendfile(&response_data.payload, &mut stream);
             }
             stream.flush().unwrap();
         } else {

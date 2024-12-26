@@ -185,19 +185,41 @@ pub mod test {
     pub fn bad_request() {
         let request_data = Request::new(String::from("GET /missing_parameter\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Unknown);
+        assert_eq!(request_data.method, RequestMethod::Unknown);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
+        assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+        assert_eq!(request_data.address, "");
         let request_data = Request::new(String::from("GET /too many params\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Unknown);
+        assert_eq!(request_data.method, RequestMethod::Unknown);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
+        assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+        assert_eq!(request_data.address, "");
     }
 
     #[test]
     pub fn invalid_http_version() {
         let request_data = Request::new(String::from("GET /index.html anything\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
+        assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+        assert_eq!(request_data.address, "");
     }
 
     #[test]
     pub fn not_found() {
-        let request_data = Request::new(String::from("GET /not_found HTTP/1.1\r\n"));
+        let request_data = Request::new(String::from("POST /api/not_found HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Post);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+        assert_eq!(request_data.address, "");
+        let request_data = Request::new(String::from("GET /not_found HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address_type, RequestAddressType::Unknown);
+        assert_eq!(request_data.address, "");
     }
 }
