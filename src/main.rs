@@ -30,10 +30,23 @@ fn main() {
     let listener: TcpListener = TcpListener::bind("127.0.0.1:8081").unwrap();
     for incoming in listener.incoming() {
         let mut stream = incoming.unwrap();
-        let mut buffer = [0; 1024];
-        stream.read(&mut buffer).unwrap();
-        let text = String::from_utf8_lossy(&buffer[..]);
-        let request_data: Request = Request::new(text.to_string());
+        let mut reader = std::io::BufReader::new(stream.try_clone().unwrap());
+        let mut buffer = String::new();
+        let mut count: usize;
+        println!("{}", buffer);
+        loop {
+            count = reader.read_line(&mut buffer).unwrap();
+            println!("{}", count);
+            if count <= 2 {
+                break;
+            }
+        }
+        println!(
+            "---- request header start ----\n{}---- request header end ----",
+            buffer
+        );
+
+        let request_data: Request = Request::new(buffer);
         let response_data: Response = Response::new(&request_data);
         let mut response_header: String = format!(
             "{} {}\r\nContent-Length: {}\r\n",
