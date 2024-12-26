@@ -46,7 +46,7 @@ fn main() {
             buffer
         );
 
-        let request_data: Request = Request::new(buffer);
+        let request_data: RequestHeader = RequestHeader::new(buffer);
         let response_data: Response = Response::new(&request_data);
         let mut response_header: String = format!(
             "{} {}\r\nContent-Length: {}\r\n",

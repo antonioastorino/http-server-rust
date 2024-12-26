@@ -1,31 +1,5 @@
 use crate::http_handler::request::*;
-
-#[derive(Debug, PartialEq)]
-pub enum ContentType {
-    Json,
-    Html,
-    Unknown,
-}
-
-impl ContentType {
-    pub fn from_file_name(path: &str) -> Self {
-        if path.ends_with(".json") {
-            return Self::Json;
-        }
-        if path.ends_with(".html") {
-            return Self::Html;
-        }
-        return Self::Unknown;
-    }
-
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            ContentType::Json => "application/json",
-            ContentType::Html => "text/html",
-            ContentType::Unknown => "",
-        }
-    }
-}
+use super::common::*;
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseStatus {
@@ -72,6 +46,7 @@ pub struct ResponsePayload {
     pub content_type: ContentType,
     pub content_size: u64,
 }
+
 #[derive(Debug, PartialEq)]
 pub struct Response {
     pub status: ResponseStatus,
@@ -79,7 +54,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn new(request_data: &Request) -> Self {
+    pub fn new(request_data: &RequestHeader) -> Self {
         let mut content_size = 0;
         let (status, path) = if request_data.syntax == RequestSyntax::Unknown {
             (ResponseStatus::BadRequest, "www/bad_request.html")
