@@ -46,7 +46,7 @@ impl ResponseStatus {
 pub struct ResponsePayload {
     pub path: &'static str,
     pub content_type: ContentType,
-    pub content_size: u64,
+    pub content_length: u64,
 }
 
 #[derive(Debug, PartialEq)]
@@ -57,7 +57,7 @@ pub struct Response {
 
 impl Response {
     pub fn new(request_data: &RequestHeader) -> Self {
-        let mut content_size = 0;
+        let mut content_length = 0;
         let (status, path) = if request_data.syntax == RequestSyntax::Unknown {
             (ResponseStatus::BadRequest, "www/bad_request.html")
         } else if request_data.method == RequestMethod::Unknown {
@@ -89,14 +89,14 @@ impl Response {
             }
         };
         if status != ResponseStatus::NoContent {
-            content_size = std::fs::metadata(path).unwrap().len();
+            content_length = std::fs::metadata(path).unwrap().len();
         }
         return Self {
             status,
             payload: ResponsePayload {
                 path,
                 content_type: ContentType::from_file_name(path),
-                content_size,
+                content_length,
             },
         };
     }

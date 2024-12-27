@@ -4,7 +4,7 @@ use super::files::*;
 #[derive(Debug, PartialEq)]
 pub struct RequestPayload {
     pub content_type: ContentType,
-    pub content_size: ContentLength,
+    pub content_length: ContentLength,
 }
 
 #[derive(Debug, PartialEq)]
@@ -53,7 +53,7 @@ impl RequestHeader {
             address: "",
             payload: RequestPayload {
                 content_type: ContentType::Unknown,
-                content_size: 0,
+                content_length: 0,
             },
         };
         let split_text = text.lines().collect::<Vec<&str>>();
@@ -79,7 +79,7 @@ impl RequestHeader {
                     ret_request_data.payload.content_type = validate_content_type(line);
                 }
                 if line.starts_with("Content-Length: ") {
-                    ret_request_data.payload.content_size = validate_content_size(line);
+                    ret_request_data.payload.content_length = validate_content_length(line);
                 }
             }
         }
@@ -119,8 +119,8 @@ pub fn validate_content_type(content_type_str: &str) -> ContentType {
     }
 }
 
-pub fn validate_content_size(content_size_str: &str) -> ContentLength {
-    let split_line = content_size_str.split(": ").collect::<Vec<&str>>();
+pub fn validate_content_length(content_length_str: &str) -> ContentLength {
+    let split_line = content_length_str.split(": ").collect::<Vec<&str>>();
     if split_line.len() == 2 {
         match split_line[1].parse::<ContentLength>() {
             Ok(value) => {
@@ -153,7 +153,7 @@ pub mod test {
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "www/index.html");
         assert_eq!(request_data.payload.content_type, ContentType::Json);
-        assert_eq!(request_data.payload.content_size, 5);
+        assert_eq!(request_data.payload.content_length, 5);
 
         let request_data = RequestHeader::new(&String::from("GET /index.html HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
