@@ -36,8 +36,9 @@ fn main() {
         println!("{}", buffer);
         loop {
             count = reader.read_line(&mut buffer).unwrap();
-            println!("{}", count);
+            // read_line() includes the EOL -> len() == 2 means "\r\n" only, i.e., empty line
             if count <= 2 {
+                // End of header detected
                 break;
             }
         }

@@ -1,5 +1,5 @@
-use crate::http_handler::request::*;
 use super::common::*;
+use crate::http_handler::request::*;
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseStatus {
@@ -68,12 +68,12 @@ impl Response {
                 ResponseStatus::HttpVersionNotSupported,
                 "www/http_version_not_supported.html",
             )
-        } else if request_data.address_type == RequestAddressType::Unknown {
-            (ResponseStatus::NotFound, "www/not_found.html")
         } else {
             // The syntax is ok. Post method don't have content -> successful request
             if request_data.method == RequestMethod::Post {
-                (ResponseStatus::NoContent, request_data.address)
+                (ResponseStatus::NoContent, "")
+            } else if request_data.address == "" {
+                (ResponseStatus::NotFound, "www/not_found.html")
             } else {
                 // Get requests want a file -> check that the file exists
                 if std::path::Path::new(request_data.address).exists() {
