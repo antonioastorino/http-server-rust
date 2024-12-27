@@ -1,22 +1,5 @@
 use super::common::*;
-
-pub fn from_address_to_path(address_str: &str) -> &'static str {
-    let valid_addresses = [
-        ("/api/status", "data/status.json"),
-        ("/index.html", "www/index.html"),
-        ("/img/test.png", "www/img/test.png"),
-    ];
-    if address_str == "/" {
-        return from_address_to_path("/index.html");
-    };
-
-    for (src, dest) in valid_addresses {
-        if src == address_str {
-            return dest;
-        }
-    }
-    return "";
-}
+use super::files::*;
 
 #[derive(Debug, PartialEq)]
 pub struct RequestPayload {

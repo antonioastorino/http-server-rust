@@ -1,5 +1,7 @@
 use super::common::*;
-use crate::http_handler::request::*;
+use crate::http_handler::request::{
+    RequestHeader, RequestHttpVersion, RequestMethod, RequestSyntax,
+};
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseStatus {
