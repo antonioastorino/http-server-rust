@@ -1,9 +1,10 @@
 use super::common::*;
 
 pub fn from_address_to_path(address_str: &str) -> &'static str {
-    let valid_addresses: [(&str, &str); 2] = [
+    let valid_addresses = [
         ("/api/status", "data/status.json"),
         ("/index.html", "www/index.html"),
+        ("/img/test.png", "www/img/test.png"),
     ];
     if address_str == "/" {
         return from_address_to_path("/index.html");
@@ -170,16 +171,25 @@ pub mod test {
         assert_eq!(request_data.address, "www/index.html");
         assert_eq!(request_data.payload.content_type, ContentType::Json);
         assert_eq!(request_data.payload.content_size, 5);
+
         let request_data = RequestHeader::new(String::from("GET /index.html HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "www/index.html");
+
+        let request_data = RequestHeader::new(String::from("GET /img/test.png HTTP/1.1\r\n"));
+        assert_eq!(request_data.syntax, RequestSyntax::Known);
+        assert_eq!(request_data.method, RequestMethod::Get);
+        assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
+        assert_eq!(request_data.address, "www/img/test.png");
+
         let request_data = RequestHeader::new(String::from("GET /api/status HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "data/status.json");
+
         let request_data = RequestHeader::new(String::from("POST /api/set HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Post);

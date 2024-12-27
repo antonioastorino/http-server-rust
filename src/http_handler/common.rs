@@ -1,12 +1,14 @@
 const CONTENT_TYPE_JSON: &'static str = "application/json";
 const CONTENT_TYPE_HTML: &'static str = "text/html";
+const CONTENT_TYPE_PNG: &'static str = "image/png";
 
 pub type ContentSize = u64;
 
 #[derive(Debug, PartialEq)]
 pub enum ContentType {
-    Json,
     Html,
+    Json,
+    Png,
     Unknown,
 }
 
@@ -18,6 +20,9 @@ impl ContentType {
         if path.ends_with(".html") {
             return Self::Html;
         }
+        if path.ends_with(".png") {
+            return Self::Png;
+        }
         return Self::Unknown;
     }
 
@@ -28,12 +33,16 @@ impl ContentType {
         if content_type_str == CONTENT_TYPE_HTML {
             return Self::Html;
         }
+        if content_type_str == CONTENT_TYPE_PNG {
+            return Self::Png;
+        }
         return Self::Unknown;
     }
     pub fn to_str(&self) -> &'static str {
         match self {
             ContentType::Json => CONTENT_TYPE_JSON,
             ContentType::Html => CONTENT_TYPE_HTML,
+            ContentType::Png => CONTENT_TYPE_PNG,
             ContentType::Unknown => "",
         }
     }
