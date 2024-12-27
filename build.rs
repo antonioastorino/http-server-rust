@@ -13,7 +13,17 @@ fn main() {
         src.read_to_string(&mut tuples_content).unwrap();
         drop(src);
 
-        let new_content = template_content.replace("%valid_addresses%", tuples_content.as_str());
+        let mut new_content =
+            template_content.replace("%valid_addresses%", tuples_content.as_str());
+        new_content = format!(
+            "{}\n{}\n{}\n{}\n{}\n\n{}",
+            "/*********************************************",
+            " *   THIS FILE IS GENERATED WHEN BUILDING    *",
+            " *  modify 'tuples.rs' and run               *",
+            " * `cargo clean && cargo build` to update it *",
+            " *********************************************/",
+            new_content
+        );
         let mut f = std::fs::File::options()
             .read(true)
             .write(true)
