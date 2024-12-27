@@ -3,3 +3,4 @@
 *.swo
 src/http_handler/files.rs
 .DS_Store
+artifacts/*

@@ -5,7 +5,7 @@ const CONTENT_TYPE_CSS: &'static str = "text/css";
 const CONTENT_TYPE_JAVASCRIPT: &'static str = "text/javascript";
 const CONTENT_TYPE_TEXT: &'static str = "text/plain";
 
-pub type ContentSize = u64;
+pub type ContentLength = u64;
 
 #[derive(Debug, PartialEq)]
 pub enum ContentType {

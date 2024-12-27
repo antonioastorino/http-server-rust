@@ -33,7 +33,6 @@ fn main() {
         let mut reader = std::io::BufReader::new(stream.try_clone().unwrap());
         let mut buffer = String::new();
         let mut count: usize;
-        println!("{}", buffer);
         loop {
             count = reader.read_line(&mut buffer).unwrap();
             // read_line() includes the EOL -> len() == 2 means "\r\n" only, i.e., empty line
@@ -46,8 +45,34 @@ fn main() {
             "---- request header start ----\n{}---- request header end ----",
             buffer
         );
+        let request_data: RequestHeader = RequestHeader::new(&buffer);
+        if request_data.payload.content_size > 0 {
+            println!(
+                "Received payload of type {:?}",
+                request_data.payload.content_type
+            );
+            let capacity: usize = request_data.payload.content_size.try_into().unwrap();
+            let mut bytes_read: usize;
+            let mut body: [u8; 1024] = [0; 1024];
+            let mut body_vec = Vec::<u8>::with_capacity(capacity);
+            loop {
+                bytes_read = reader.read(&mut body).unwrap();
+                body_vec.append(&mut (body[0..bytes_read].to_owned().clone()));
+                if bytes_read < 1024 {
+                    break;
+                }
+            }
 
-        let request_data: RequestHeader = RequestHeader::new(buffer);
+            println!("More: {:?}", std::str::from_utf8(&body_vec).unwrap());
+            let mut out_file = std::fs::File::options()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(format!("artifacts/{:?}-data", request_data.payload.content_type).as_str())
+                .unwrap();
+
+            write!(&mut out_file, "{}", std::str::from_utf8(&body_vec).unwrap()).unwrap();
+        }
         let response_data: Response = Response::new(&request_data);
         let mut response_header: String = format!(
             "{} {}\r\nContent-Length: {}\r\n",

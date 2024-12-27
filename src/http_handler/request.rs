@@ -4,7 +4,7 @@ use super::files::*;
 #[derive(Debug, PartialEq)]
 pub struct RequestPayload {
     pub content_type: ContentType,
-    pub content_size: ContentSize,
+    pub content_size: ContentLength,
 }
 
 #[derive(Debug, PartialEq)]
@@ -45,7 +45,7 @@ pub struct RequestHeader {
 }
 
 impl RequestHeader {
-    pub fn new(text: String) -> Self {
+    pub fn new(text: &String) -> Self {
         let mut ret_request_data = Self {
             syntax: RequestSyntax::Unknown,
             http_version: RequestHttpVersion::Unknown,
@@ -78,7 +78,7 @@ impl RequestHeader {
                 if line.starts_with("Content-Type: ") {
                     ret_request_data.payload.content_type = validate_content_type(line);
                 }
-                if line.starts_with("Content-Size: ") {
+                if line.starts_with("Content-Length: ") {
                     ret_request_data.payload.content_size = validate_content_size(line);
                 }
             }
@@ -119,10 +119,10 @@ pub fn validate_content_type(content_type_str: &str) -> ContentType {
     }
 }
 
-pub fn validate_content_size(content_size_str: &str) -> ContentSize {
+pub fn validate_content_size(content_size_str: &str) -> ContentLength {
     let split_line = content_size_str.split(": ").collect::<Vec<&str>>();
     if split_line.len() == 2 {
-        match split_line[1].parse::<ContentSize>() {
+        match split_line[1].parse::<ContentLength>() {
             Ok(value) => {
                 return value;
             }
@@ -140,10 +140,10 @@ pub mod test {
     #[test]
     pub fn valid_addresses() {
         let request_data = RequestHeader::new(
-            vec![
+            &vec![
                 "GET / HTTP/1.1",
                 "Content-Type: application/json",
-                "Content-Size: 5",
+                "Content-Length: 5",
                 "\r\n",
             ]
             .join("\r\n"),
@@ -155,25 +155,25 @@ pub mod test {
         assert_eq!(request_data.payload.content_type, ContentType::Json);
         assert_eq!(request_data.payload.content_size, 5);
 
-        let request_data = RequestHeader::new(String::from("GET /index.html HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /index.html HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "www/index.html");
 
-        let request_data = RequestHeader::new(String::from("GET /img/test.png HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /img/test.png HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "www/img/test.png");
 
-        let request_data = RequestHeader::new(String::from("GET /api/status HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /api/status HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "data/status.json");
 
-        let request_data = RequestHeader::new(String::from("POST /api/set HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("POST /api/set HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Post);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
@@ -182,12 +182,12 @@ pub mod test {
 
     #[test]
     pub fn bad_request() {
-        let request_data = RequestHeader::new(String::from("GET /missing_parameter\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /missing_parameter\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Unknown);
         assert_eq!(request_data.method, RequestMethod::Unknown);
         assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
         assert_eq!(request_data.address, "");
-        let request_data = RequestHeader::new(String::from("GET /too many params\n"));
+        let request_data = RequestHeader::new(&String::from("GET /too many params\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Unknown);
         assert_eq!(request_data.method, RequestMethod::Unknown);
         assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
@@ -196,7 +196,7 @@ pub mod test {
 
     #[test]
     pub fn invalid_http_version() {
-        let request_data = RequestHeader::new(String::from("GET /index.html anything\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /index.html anything\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Unknown);
@@ -205,7 +205,7 @@ pub mod test {
 
     #[test]
     pub fn method_not_allowed() {
-        let request_data = RequestHeader::new(String::from("PUT /index.html HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("PUT /index.html HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Unknown);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
@@ -214,12 +214,12 @@ pub mod test {
 
     #[test]
     pub fn not_found() {
-        let request_data = RequestHeader::new(String::from("POST /api/not_found HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("POST /api/not_found HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Post);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
         assert_eq!(request_data.address, "");
-        let request_data = RequestHeader::new(String::from("GET /not_found HTTP/1.1\r\n"));
+        let request_data = RequestHeader::new(&String::from("GET /not_found HTTP/1.1\r\n"));
         assert_eq!(request_data.syntax, RequestSyntax::Known);
         assert_eq!(request_data.method, RequestMethod::Get);
         assert_eq!(request_data.http_version, RequestHttpVersion::Http11);
