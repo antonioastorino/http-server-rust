@@ -1,6 +1,7 @@
 const CONTENT_TYPE_HTML: &'static str = "text/html";
 const CONTENT_TYPE_JSON: &'static str = "application/json";
 const CONTENT_TYPE_PNG: &'static str = "image/png";
+const CONTENT_TYPE_JPEG: &'static str = "image/jpeg";
 const CONTENT_TYPE_CSS: &'static str = "text/css";
 const CONTENT_TYPE_JAVASCRIPT: &'static str = "text/javascript";
 const CONTENT_TYPE_TEXT: &'static str = "text/plain";
@@ -12,6 +13,7 @@ pub enum ContentType {
     Html,
     Json,
     Png,
+    Jpeg,
     Css,
     Javascript,
     Text,
@@ -29,6 +31,9 @@ impl ContentType {
         }
         if path.ends_with(".png") {
             return Self::Png;
+        }
+        if path.ends_with(".jpeg") || path.ends_with(".jpg") {
+            return Self::Jpeg;
         }
         if path.ends_with(".css") {
             return Self::Css;
@@ -53,6 +58,9 @@ impl ContentType {
         if content_type_str == CONTENT_TYPE_PNG {
             return Self::Png;
         }
+        if content_type_str == CONTENT_TYPE_JPEG {
+            return Self::Jpeg;
+        }
         if content_type_str == CONTENT_TYPE_CSS {
             return Self::Css;
         }
@@ -65,12 +73,20 @@ impl ContentType {
         return Self::Unknown;
     }
 
+    pub fn is_binary(&self) -> bool {
+        match self {
+            ContentType::Png | ContentType::Jpeg => true,
+            _ => false,
+        }
+    }
+
     // A specific variant is mapped to a 'Content-Type' value
     pub fn to_str(&self) -> &'static str {
         match self {
             ContentType::Json => CONTENT_TYPE_JSON,
             ContentType::Html => CONTENT_TYPE_HTML,
             ContentType::Png => CONTENT_TYPE_PNG,
+            ContentType::Jpeg => CONTENT_TYPE_JPEG,
             ContentType::Css => CONTENT_TYPE_CSS,
             ContentType::Javascript => CONTENT_TYPE_JAVASCRIPT,
             ContentType::Text => CONTENT_TYPE_TEXT,

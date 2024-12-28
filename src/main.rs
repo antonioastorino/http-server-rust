@@ -1,5 +1,4 @@
 mod http_handler;
-use http_handler::common::ContentType;
 use http_handler::request::*;
 use http_handler::response::*;
 use std::io::prelude::*;
@@ -65,7 +64,7 @@ fn main() {
             loop {
                 bytes_read = reader.read(&mut body).unwrap();
                 println!("capacity left {}, bytes read {}", capacity, bytes_read);
-                if request_data.payload.content_type == ContentType::Png {
+                if request_data.payload.content_type.is_binary() {
                     out_file.write_all(&body[0..bytes_read]).unwrap();
                 } else {
                     write!(
