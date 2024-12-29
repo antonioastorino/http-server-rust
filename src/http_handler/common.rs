@@ -22,26 +22,27 @@ pub enum ContentType {
 
 impl ContentType {
     // The server's payload is mapped to a specific variant using the file extension
-    pub fn from_file_name(path: &str) -> Self {
-        if path.ends_with(".json") {
+    pub fn from_file_name(path_str: &str) -> Self {
+        let path = path_str.to_uppercase();
+        if path.ends_with(".JSON") {
             return Self::Json;
         }
-        if path.ends_with(".html") {
+        if path.ends_with(".HTML") {
             return Self::Html;
         }
-        if path.ends_with(".png") {
+        if path.ends_with(".PNG") {
             return Self::Png;
         }
-        if path.ends_with(".jpeg") || path.ends_with(".jpg") {
+        if path.ends_with(".JPEG") || path.ends_with(".JPG") {
             return Self::Jpeg;
         }
-        if path.ends_with(".css") {
+        if path.ends_with(".CSS") {
             return Self::Css;
         }
-        if path.ends_with(".js") {
+        if path.ends_with(".JS") {
             return Self::Javascript;
         }
-        if path.ends_with(".txt") {
+        if path.ends_with(".TXT") {
             return Self::Text;
         }
         return Self::Unknown;

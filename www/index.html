@@ -7,6 +7,24 @@
   </head>
   <body>
     <p>I'm the content</p>
+    <form id="fileUploadForm">
+      <input type="text" name="firstName" />
+      File: <input type="file" name="upload" id="fileInput" />
+      <input type="submit" id="btn" />
+    </form>
+    <script>
+      const form = document.getElementById("fileUploadForm");
+      const file = document.getElementById("fileInput");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (file.files.length == 1) {
+          let req = new XMLHttpRequest();
+          req.open("POST", "/api/set");
+          console.log(file.files.length);
+          req.send(file.files[0]);
+        }
+      });
+    </script>
     <img src="/img/test.png" />
   </body>
 </html>

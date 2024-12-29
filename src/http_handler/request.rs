@@ -75,10 +75,10 @@ impl RequestHeader {
         // --- check for interesting parameters ---
         if split_text.len() > 1 {
             for line in split_text[1..].iter() {
-                if line.starts_with("Content-Type: ") {
+                if line.to_uppercase().starts_with("CONTENT-TYPE:") {
                     ret_request_data.payload.content_type = validate_content_type(line);
                 }
-                if line.starts_with("Content-Length: ") {
+                if line.to_uppercase().starts_with("CONTENT-LENGTH:") {
                     ret_request_data.payload.content_length = validate_content_length(line);
                 }
             }
@@ -111,18 +111,18 @@ pub fn validate_version(version: &str) -> RequestHttpVersion {
 }
 
 pub fn validate_content_type(content_type_str: &str) -> ContentType {
-    let split_line = content_type_str.split(": ").collect::<Vec<&str>>();
+    let split_line = content_type_str.split(":").collect::<Vec<&str>>();
     if split_line.len() == 2 {
-        return ContentType::from_content_type_str(split_line[1]);
+        return ContentType::from_content_type_str(split_line[1].trim());
     } else {
         return ContentType::Unknown;
     }
 }
 
 pub fn validate_content_length(content_length_str: &str) -> ContentLength {
-    let split_line = content_length_str.split(": ").collect::<Vec<&str>>();
+    let split_line = content_length_str.split(":").collect::<Vec<&str>>();
     if split_line.len() == 2 {
-        match split_line[1].parse::<ContentLength>() {
+        match split_line[1].trim().parse::<ContentLength>() {
             Ok(value) => {
                 return value;
             }
