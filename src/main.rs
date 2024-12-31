@@ -27,7 +27,7 @@ fn sendfile(payload: &ResponsePayload, stream: &mut TcpStream) -> i32 {
 
 fn main() {
     println!("Hello, TCP!");
-    let listener: TcpListener = TcpListener::bind("127.0.0.1:8081").unwrap();
+    let listener: TcpListener = TcpListener::bind("0.0.0.0:8081").unwrap();
     for incoming in listener.incoming() {
         let mut stream = incoming.unwrap();
         let mut reader = std::io::BufReader::new(stream.try_clone().unwrap());
